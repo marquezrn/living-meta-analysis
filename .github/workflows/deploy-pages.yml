@@ -37,6 +37,7 @@ jobs:
       - run: pnpm build
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_STATIC_DEMO: 'true'
       - run: cp dist/index.html dist/404.html
       - uses: actions/configure-pages@v5
         with:

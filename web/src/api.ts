@@ -1,3 +1,4 @@
+import { demoArtifactUrl, demoDocumentUrl, demoRequest, DemoError, isStaticDemo } from './demoApi';
 import type { AccessResolution, AnalysisSpec, Benchmark, Contrast, DescriptiveAnalysis, Document, Experiment, Invitation, Measurement, Member, Project, Protocol, Publication, ReviewStatus, Run, Session } from './types';
 
 export class ApiError extends Error {
@@ -14,6 +15,10 @@ function errorDetail(value: unknown): string {
   return 'The request could not be completed.';
 }
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  if (isStaticDemo()) {
+    try { return demoRequest<T>(path, options); }
+    catch (reason) { if (reason instanceof DemoError) throw new ApiError(reason.message, reason.status); throw reason; }
+  }
   const headers = new Headers(options.headers);
   headers.set('Accept', 'application/json');
   if (options.body && !(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
@@ -60,8 +65,8 @@ export const api = {
   members: (id: string) => request<Member[]>(`${projectPath(id)}/members`),
   invite: (id: string, role: 'editor' | 'reader') => request<Invitation>(`${projectPath(id)}/invitations`, post({ role })),
   acceptInvitation: (token: string) => request<{ project_id?: string; project?: Project }>(`/invitations/${encodeURIComponent(token)}/accept`, post()),
-  logout: async () => { const response = await fetch('/auth/logout', { method: 'POST', credentials: 'same-origin' }); if (!response.ok) throw new ApiError('Sign out could not be completed. Please try again.', response.status); },
+  logout: async () => { if (isStaticDemo()) return; const response = await fetch('/auth/logout', { method: 'POST', credentials: 'same-origin' }); if (!response.ok) throw new ApiError('Sign out could not be completed. Please try again.', response.status); },
 };
-export const documentUrl = (id: string, page?: number) => `/api/v1/documents/${encodeURIComponent(id)}/file${page ? `#page=${page}` : ''}`;
-export const artifactUrl = (projectId: string, key: string) => `/api/v1${projectPath(projectId)}/artifacts?${new URLSearchParams({ key })}`;
+export const documentUrl = (id: string, page?: number) => isStaticDemo() ? demoDocumentUrl(id) : `/api/v1/documents/${encodeURIComponent(id)}/file${page ? `#page=${page}` : ''}`;
+export const artifactUrl = (projectId: string, key: string) => isStaticDemo() ? demoArtifactUrl() : `/api/v1${projectPath(projectId)}/artifacts?${new URLSearchParams({ key })}`;
 export const exportUrl = (id: string, format: string) => `/api/v1${projectPath(id)}/exports/${encodeURIComponent(format)}`;
