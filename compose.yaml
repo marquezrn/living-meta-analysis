@@ -1,0 +1,109 @@
+# Local development only. Hosted deployments require HTTPS, OAuth, and private R2.
+name: living-meta-analysis
+
+x-application: &application
+  build:
+    context: .
+    target: runtime
+  environment: &application-environment
+    ENVIRONMENT: development
+    APP_URL: http://localhost:8000
+    DATABASE_URL: postgresql+psycopg://livingmeta:local-development-password@database:5432/livingmeta
+    BROKER_URL: redis://queue:6379/0
+    TASK_MODE: celery
+    STORAGE_BACKEND: local
+    PRIVATE_DIRECTORY: /app/private
+    ALLOW_LOCAL_DEVELOPMENT_LOGIN: "false"
+    SESSION_SECRET: ${SESSION_SECRET:-}
+    GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+    GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+    OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    OWNER_GITHUB_LOGIN: ${OWNER_GITHUB_LOGIN:-marquezrn}
+    OWNER_GITHUB_ID: ${OWNER_GITHUB_ID:-290779630}
+    MAX_TOTAL_OPENAI_USD: "100"
+    MAX_RUN_OPENAI_USD: "100"
+    CONTACT_EMAIL: ${CONTACT_EMAIL:-}
+    OPENALEX_API_KEY: ${OPENALEX_API_KEY:-}
+    NCBI_API_KEY: ${NCBI_API_KEY:-}
+    ELSEVIER_API_KEY: ${ELSEVIER_API_KEY:-}
+    ELSEVIER_INSTTOKEN: ${ELSEVIER_INSTTOKEN:-}
+    SCOPUS_VERIFIED: ${SCOPUS_VERIFIED:-false}
+  volumes:
+    - private-artifacts:/app/private
+  depends_on:
+    database:
+      condition: service_healthy
+    queue:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  database:
+    image: postgres:16.10-bookworm
+    environment:
+      POSTGRES_DB: livingmeta
+      POSTGRES_USER: livingmeta
+      # A documented local-only password; this service has no published port.
+      POSTGRES_PASSWORD: local-development-password
+    volumes:
+      - database-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U livingmeta -d livingmeta"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  queue:
+    image: redis:7.4.6-bookworm
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - queue-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  migrate:
+    <<: *application
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+  web:
+    <<: *application
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+      queue:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+  worker:
+    <<: *application
+    command: ["celery", "-A", "livingmeta.tasks:celery_app", "worker", "--loglevel=INFO", "--concurrency=1"]
+    healthcheck:
+      disable: true
+    depends_on:
+      database:
+        condition: service_healthy
+      queue:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+  monitor:
+    <<: *application
+    profiles: ["monitor"]
+    command: ["livingmeta", "monitor-due"]
+    environment:
+      <<: *application-environment
+      # This metadata-only process cannot access paid model credentials.
+      OPENAI_API_KEY: ""
+    restart: "no"
+    healthcheck:
+      disable: true
+
+volumes:
+  database-data:
+  queue-data:
+  private-artifacts:

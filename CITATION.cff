@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "Please cite this software and the original studies used in your research."
+type: software
+title: "Living Meta-Analysis: evidence-preserving agent workflows for chemistry and chemical engineering"
+version: 0.1.0
+date-released: 2026-10-04
+authors:
+  - family-names: Marquez Contreras
+    given-names: Ronald
+    orcid: "https://orcid.org/0000-0001-6003-7487"
+repository-code: "https://github.com/marquezrn/living-meta-analysis"
+url: "https://github.com/marquezrn/living-meta-analysis"
+license: MIT
+keywords: [living systematic review, meta-analysis, chemical engineering, nanocellulose, Pickering emulsions, scientific data extraction]

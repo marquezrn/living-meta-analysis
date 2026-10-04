@@ -1,0 +1,62 @@
+name: Offline verification
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  python:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16.10-bookworm
+        env:
+          POSTGRES_DB: livingmeta_test
+          POSTGRES_USER: livingmeta
+          POSTGRES_PASSWORD: synthetic-test-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U livingmeta -d livingmeta_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      LIVINGMETA_TEST_POSTGRES_URL: postgresql+psycopg://livingmeta:synthetic-test-password@127.0.0.1:5432/livingmeta_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --require-hashes -r requirements.lock
+      - run: python -m pip install build==1.6.1 hatchling==1.32.4
+      - run: python -m pip install --no-deps --no-build-isolation .
+      - run: ruff check src tests scripts
+      - run: pytest -q
+      - run: python scripts/check_publication.py
+      - run: python scripts/schema_contracts.py
+      - run: python -m build --no-isolation --wheel
+      - name: Verify packaged R resource
+        run: python -c 'import zipfile,pathlib; z=zipfile.ZipFile(next(pathlib.Path("dist").glob("*.whl"))); assert "livingmeta/statistics/meta_analysis.R" in z.namelist()'
+      - name: Verify fresh migration
+        run: |
+          DATABASE_URL=sqlite:///private/ci-migrations.sqlite alembic upgrade head
+          DATABASE_URL=sqlite:///private/ci-migrations.sqlite alembic check
+  frontend:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.20.0'}
+      - run: npm install --global pnpm@11.19.0
+      - run: pnpm install --frozen-lockfile
+        working-directory: web
+      - run: pnpm typecheck && pnpm test && pnpm build
+        working-directory: web
+  statistics-container:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --target test -t livingmeta-test .
+      - name: Require pinned R and run its integration tests
+        run: |
+          docker run --rm livingmeta-test Rscript --vanilla -e 'stopifnot(getRversion() == "4.5.1", packageVersion("metafor") == package_version("4.8-0"), packageVersion("clubSandwich") == package_version("0.6.1"))'
+          docker run --rm livingmeta-test python -m pytest tests/test_statistics.py -q

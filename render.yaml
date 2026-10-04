@@ -1,0 +1,151 @@
+# UTC hourly trigger; application database selects Monday 08:00 Europe/Madrid.
+# Review service compute plans in Render before deploying; hosting is separate from AI usage.
+services:
+  - type: web
+    name: livingmeta-app
+    runtime: docker
+    region: frankfurt
+    plan: 0.5c-512mb
+    dockerfilePath: ./Dockerfile
+    dockerCommand: uvicorn livingmeta.main:app --host 0.0.0.0 --port 8000 --no-access-log
+    healthCheckPath: /health
+    preDeployCommand: alembic upgrade head
+    envVars:
+      - fromGroup: livingmeta-common
+      - key: DATABASE_URL
+        fromDatabase: {name: livingmeta-db, property: connectionString}
+      - key: BROKER_URL
+        fromService: {name: livingmeta-queue, type: keyvalue, property: connectionString}
+      - key: APP_URL
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: R2_ENDPOINT_URL
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: CONTACT_EMAIL
+        sync: false
+      - key: OPENALEX_API_KEY
+        sync: false
+      - key: NCBI_API_KEY
+        sync: false
+      - key: ELSEVIER_API_KEY
+        sync: false
+      - key: ELSEVIER_INSTTOKEN
+        sync: false
+  - type: worker
+    name: livingmeta-worker
+    runtime: docker
+    region: frankfurt
+    plan: 1c-2g
+    dockerfilePath: ./Dockerfile
+    dockerCommand: celery -A livingmeta.tasks:celery_app worker --concurrency=1 --loglevel=WARNING
+    envVars:
+      - fromGroup: livingmeta-common
+      - key: DATABASE_URL
+        fromDatabase: {name: livingmeta-db, property: connectionString}
+      - key: BROKER_URL
+        fromService: {name: livingmeta-queue, type: keyvalue, property: connectionString}
+      - key: APP_URL
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: R2_ENDPOINT_URL
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+  - type: cron
+    name: livingmeta-literature-monitor
+    runtime: docker
+    region: frankfurt
+    plan: 0.5c-512mb
+    dockerfilePath: ./Dockerfile
+    schedule: "0 * * * *"
+    dockerCommand: livingmeta monitor-due
+    envVars:
+      - key: ENVIRONMENT
+        value: monitor
+      - key: TASK_MODE
+        value: celery
+      - key: DATABASE_URL
+        fromDatabase: {name: livingmeta-db, property: connectionString}
+      - key: BROKER_URL
+        fromService: {name: livingmeta-queue, type: keyvalue, property: connectionString}
+      - key: CONTACT_EMAIL
+        sync: false
+      - key: OPENALEX_API_KEY
+        sync: false
+      - key: NCBI_API_KEY
+        sync: false
+      - key: ELSEVIER_API_KEY
+        sync: false
+      - key: ELSEVIER_INSTTOKEN
+        sync: false
+      - key: SCOPUS_VERIFIED
+        value: "false"
+      - key: MONITOR_TIMEZONE
+        value: Europe/Madrid
+      - key: MONITOR_WEEKDAY
+        value: "0"
+      - key: MONITOR_HOUR
+        value: "8"
+  - type: keyvalue
+    name: livingmeta-queue
+    region: frankfurt
+    plan: 256mb
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+    persistenceMode: journal-snapshot
+databases:
+  - name: livingmeta-db
+    region: frankfurt
+    plan: 0.1c-256mb
+    postgresMajorVersion: "16"
+    databaseName: livingmeta
+    user: livingmeta
+    diskSizeGB: 15
+    ipAllowList: []
+envVarGroups:
+  - name: livingmeta-common
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: TASK_MODE
+        value: celery
+      - key: STORAGE_BACKEND
+        value: r2
+      - key: PRIVATE_DIRECTORY
+        value: /app/private
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: OWNER_GITHUB_LOGIN
+        value: marquezrn
+      - key: OWNER_GITHUB_ID
+        value: "290779630"
+      - key: ALLOW_LOCAL_DEVELOPMENT_LOGIN
+        value: "false"
+      - key: EXTRACTION_MODEL
+        value: gpt-6.1-sol
+      - key: VERIFICATION_MODEL
+        value: gpt-6-astra
+      - key: MAX_TOTAL_OPENAI_USD
+        value: "100"
+      - key: MAX_RUN_OPENAI_USD
+        value: "100"
+      - key: SCOPUS_VERIFIED
+        value: "false"
