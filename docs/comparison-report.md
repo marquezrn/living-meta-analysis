@@ -73,11 +73,14 @@ They are not measurements of model extraction quality. The local host has no R
 engine or Docker; GitHub's container check requires the pinned R engine and runs
 its integration test. Repository CI records the verification status for each commit.
 
-Local release verification: **123 Python tests passed; 3 skipped** (two PostgreSQL
-concurrency checks and the pinned R integration check). **18 frontend tests passed**;
+Local release verification: **124 Python tests passed; 3 skipped** (two PostgreSQL
+concurrency checks and the pinned R integration check). **19 frontend tests passed**;
 type checking, production build, Python linting, wheel packaging, fresh SQLite
 migration and publication allowlist checks passed. The private interface was
 inspected with the imported 59-source corpus and an explicitly unexecuted benchmark.
+GitHub has additionally passed the PostgreSQL concurrency checks, the production
+container build, exact R/package version assertions, and all 17 statistical
+reference checks. The workflow badge links to verification for the current commit.
 
 Follow the [reproducible evaluation procedure](evaluation.md) to execute a blinded
 extraction, compare DOI and conditions, retain ambiguous matches, and independently

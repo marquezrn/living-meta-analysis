@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Measurement } from '../types';
-import { comparableGroups, number, progressInfo, safeExternalUrl } from '../utils';
+import { comparableGroups, date, number, progressInfo, safeExternalUrl } from '../utils';
 
 const measurement = (change: Partial<Measurement> = {}): Measurement => ({
   id: 'synthetic', experiment_id: 'experiment', outcome: 'Droplet_Size_um', raw_value: '7', value: 7,
@@ -31,6 +31,10 @@ describe('scientific exploration', () => {
 });
 
 describe('safe presentation', () => {
+  it('shows the Madrid weekly check at 08:00 across the daylight-saving transition', () => {
+    expect(date('2026-10-19T06:00:00Z', 'Europe/Madrid')).toContain('08:00');
+    expect(date('2026-10-26T07:00:00Z', 'Europe/Madrid')).toContain('08:00');
+  });
   it('blocks source-controlled executable URLs', () => {
     expect(safeExternalUrl('javascript:alert(1)')).toBeUndefined();
     expect(safeExternalUrl('file:///private/evidence')).toBeUndefined();

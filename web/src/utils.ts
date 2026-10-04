@@ -2,10 +2,10 @@ import type { Measurement } from './types';
 export const humanize = (value: string) => value.replaceAll('_', ' ').replace(/\b\w/g, char => char.toUpperCase());
 export const money = (value?: number | null) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(value ?? 0);
 export const number = (value?: number | null) => value == null || !Number.isFinite(value) ? 'Not reported' : new Intl.NumberFormat('en-US', { maximumSignificantDigits: 6 }).format(value);
-export function date(value?: string | null) {
+export function date(value?: string | null, timeZone?: string) {
   if (!value) return 'Not yet';
   const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone, timeZoneName: 'short' });
 }
 export function safeExternalUrl(value?: string | null): string | undefined {
   if (!value) return undefined;

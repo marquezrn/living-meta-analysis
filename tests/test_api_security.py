@@ -76,6 +76,22 @@ def test_anonymous_users_cannot_list_or_create_private_projects(private_api):
     assert env.client.get(f"/api/v1/projects/{env.ids['project']}").status_code == 401
 
 
+def test_sqlite_dates_preserve_utc_in_public_response_contracts(private_api):
+    env = private_api
+    authorize(env, "owner")
+    from livingmeta.db import Run
+    with env.app.state.sessions() as db:
+        project = db.get(Project, env.ids["project"])
+        project.next_metadata_check = utcnow()
+        db.add(Run(project_id=project.id, budget_microusd=1000000, document_ids=[]))
+        db.commit()
+    project = env.client.get(f"/api/v1/projects/{env.ids['project']}").json()
+    assert project["created_at"].endswith("Z") and project["next_metadata_check"].endswith("Z")
+    documents = env.client.get(f"/api/v1/projects/{env.ids['project']}/documents").json()
+    runs = env.client.get(f"/api/v1/projects/{env.ids['project']}/runs").json()
+    assert documents[0]["created_at"].endswith("Z") and runs[0]["created_at"].endswith("Z")
+
+
 @pytest.mark.parametrize("resource", ["", "/protocol", "/documents", "/runs", "/experiments", "/measurements",
                                          "/publications", "/analysis", "/benchmark", "/members", "/exports/json"])
 def test_project_membership_prevents_idor_for_every_read_surface(private_api, resource):

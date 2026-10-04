@@ -1,14 +1,22 @@
 """Public API response schemas; internal object keys and authentication tokens are excluded."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .domain import Citation, Measurement, Protocol
 
 
-class ProjectView(BaseModel):
+class UTCResponse(BaseModel):
+    @field_validator("*", mode="before")
+    @classmethod
+    def preserve_utc(cls, value):
+        # SQLite loses tzinfo; database timestamps are stored in UTC.
+        return value.replace(tzinfo=timezone.utc) if isinstance(value, datetime) and value.tzinfo is None else value
+
+
+class ProjectView(UTCResponse):
     id: str
     name: str
     protocol: Protocol
@@ -23,7 +31,7 @@ class ProjectView(BaseModel):
     discovery_report: dict
 
 
-class RunView(BaseModel):
+class RunView(UTCResponse):
     id: str
     project_id: str
     status: Literal["queued", "running", "completed", "completed_with_abstentions", "budget_exhausted", "cancelled", "failed"]
@@ -38,7 +46,7 @@ class RunView(BaseModel):
     cancel_requested: bool
 
 
-class DocumentView(BaseModel):
+class DocumentView(UTCResponse):
     id: str
     filename: str
     sha256: str
@@ -54,7 +62,7 @@ class MeasurementView(Measurement):
     source_status: str = "active"
 
 
-class PublicationView(Citation):
+class PublicationView(Citation, UTCResponse):
     id: str
     state: str
     sources: list[str] = Field(default_factory=list)
