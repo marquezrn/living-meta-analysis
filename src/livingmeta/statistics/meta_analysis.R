@@ -1,4 +1,5 @@
 # Fixed JSON bridge. Neither model-generated expressions nor user formulas are evaluated.
+if (getRversion() != "4.5.1") stop("Required pinned R interpreter: 4.5.1")
 suppressPackageStartupMessages(library(jsonlite))
 input <- paste(readLines(file("stdin"), warn = FALSE), collapse = "\n")
 request <- fromJSON(input, simplifyVector = TRUE)

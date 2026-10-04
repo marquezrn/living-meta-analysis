@@ -25,7 +25,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libpq-dev tesseract-ocr tesseract-ocr-eng \
     && python3 -c 'import sys; assert sys.version_info[:2] == (3, 12), sys.version' \
     && rm -rf /var/lib/apt/lists/*
-RUN R -q -e 'stopifnot(getRversion() == "4.5.1"); install.packages("https://cran.r-project.org/src/contrib/Archive/remotes/remotes_2.5.0.tar.gz", repos=NULL, type="source"); remotes::install_version("jsonlite", "2.0.0", repos="https://cloud.r-project.org", dependencies=NA, upgrade="never"); remotes::install_version("metafor", "4.8-0", repos="https://cloud.r-project.org", dependencies=NA, upgrade="never"); remotes::install_version("clubSandwich", "0.6.1", repos="https://cloud.r-project.org", dependencies=NA, upgrade="never"); stopifnot(as.character(packageVersion("jsonlite")) == "2.0.0", as.character(packageVersion("metafor")) == "4.8.0", as.character(packageVersion("clubSandwich")) == "0.6.1")'
+COPY statistics/install_packages.R /tmp/install_packages.R
+RUN Rscript --vanilla /tmp/install_packages.R
 RUN python3 -m venv /opt/venv
 COPY requirements.lock ./
 RUN pip install --require-hashes -r requirements.lock \
