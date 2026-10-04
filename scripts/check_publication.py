@@ -8,7 +8,7 @@ ROOT_FILES = {"README.md", "LICENSE", "CITATION.cff", "THIRD_PARTY_NOTICES.md", 
     "requirements.lock", "Dockerfile", "compose.yaml", "render.yaml", "alembic.ini", ".gitignore",
     ".dockerignore", ".env.example"}
 ROOT_DIRS = {"src", "tests", "docs", "protocols", "statistics", "migrations", "scripts", "evaluation", ".github"}
-WEB_FILES = {"web/package.json", "web/pnpm-lock.yaml", "web/index.html", "web/tsconfig.json", "web/vite.config.ts"}
+WEB_FILES = {"web/package.json", "web/pnpm-lock.yaml", "web/index.html", "web/tsconfig.json", "web/vite.config.ts", "web/.gitignore"}
 EXCLUDED = {"private", "data", ".venv", "node_modules", "dist", "build", ".git", "__pycache__",
             ".pytest_cache", ".ruff_cache"}
 SOURCE_EXTENSIONS = {".pdf", ".docx", ".xlsx", ".png", ".jpg", ".jpeg", ".tif", ".parquet", ".sqlite", ".db", ".whl"}

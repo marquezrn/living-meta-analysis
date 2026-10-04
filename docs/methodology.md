@@ -60,6 +60,13 @@ The bridge sends validated JSON to a fixed script. Neither user-provided R expre
 nor agent-generated formulas are evaluated. It reports unavailable R, package-version
 mismatch, timeout, and fit failures instead of silently substituting another estimator.
 `statistics/Dockerfile` installs the R package pins; `jsonlite` is fixed at 2.0.0.
+The topologically ordered `statistics/packages.lock.tsv` freezes all 13 non-base
+packages observed in the verified container, including transitive dependencies.
+Both container builds install only those exact source versions, disable dependency
+resolution, and assert every installed version. An unavailable pin stops the build.
+R and its recommended packages come from the pinned R 4.5.1 image. Changes to this
+lock require another container verification; local hosts without R do not establish
+scientific-engine validation.
 Synthetic analytical tests verify effect and covariance calculations. R integration
 checks are skipped honestly on hosts where R is absent and must run in the pinned
 container before a scientific pooled result is published.

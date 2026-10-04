@@ -5,6 +5,44 @@ GitHub repository access does not configure application OAuth, OpenAI, Render or
 Use service dashboards to configure secrets; never put credentials in repository
 files, reports, screenshots, issue comments or chat messages.
 
+## Prepared services and estimated hosting cost
+
+The Blueprint prepares new services in Frankfurt on a free Hobby workspace.
+It does not create services until imported and approved in Render.
+The following estimate was reviewed on 2026-10-04; confirm the dashboard quote
+before provisioning. These recurring costs are separate from the USD 100 OpenAI
+evaluation allowance.
+
+| Service | Prepared capacity | Estimated monthly cost |
+| --- | --- | ---: |
+| Web application | 0.5 CPU, 512 MB | USD 7 |
+| Extraction worker | 1 CPU, 2 GB | USD 25 |
+| PostgreSQL compute | 0.1 CPU, 256 MB | USD 6 |
+| Persistent job queue | 256 MB | USD 10 |
+| Metadata trigger | 0.5 CPU, 512 MB, hourly due check | USD 1 minimum |
+| PostgreSQL storage | 15 GB | USD 4.20–4.50 |
+| Total before taxes and usage overages | | USD 53.20–53.50 |
+
+Budget approximately **USD 54/month** for the prepared Render services. The storage
+range reflects Render's pricing page and cost guide treating the first included
+GB differently. A Pro workspace, additional instances, traffic, and build minutes
+can increase the total. See [Render pricing](https://render.com/pricing),
+[billing components](https://render.com/articles/how-much-does-cloud-application-hosting-cost-for-small-businesses),
+and [cron billing](https://render.com/docs/cronjobs).
+
+Prepare an R2 **Standard** bucket named `livingmeta-private-artifacts`, with public
+access disabled and an object read/write credential limited to that bucket.
+R2 includes 10 GB-month, one million Class A requests and ten million Class B
+requests per month; usage above those allowances is billed. Activation can require
+a payment method and subscription checkout even within the free allowance.
+See [R2 pricing](https://developers.cloudflare.com/r2/pricing/) and
+[R2 activation](https://developers.cloudflare.com/r2/get-started/).
+
+Before provisioning, complete account sign-in, review the exact Render quote and
+R2 checkout, and grant Render's repository installation access only to
+`marquezrn/living-meta-analysis`. Sign-in authorization alone does not install the
+repository integration or create these services.
+
 ## Connections required
 
 | Connection | Configure | Purpose |

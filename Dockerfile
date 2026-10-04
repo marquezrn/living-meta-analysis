@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # The application and its fixed statistics bridge share one reproducible image.
-FROM node:22.20.0-bookworm-slim AS frontend
+FROM node:24.19.0-bookworm-slim AS frontend
 ARG PNPM_VERSION=11.19.0
 WORKDIR /frontend
 RUN npm install --global pnpm@${PNPM_VERSION}
@@ -26,7 +26,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && python3 -c 'import sys; assert sys.version_info[:2] == (3, 12), sys.version' \
     && rm -rf /var/lib/apt/lists/*
 COPY statistics/install_packages.R /tmp/install_packages.R
-RUN Rscript --vanilla /tmp/install_packages.R
+COPY statistics/packages.lock.tsv /tmp/packages.lock.tsv
+RUN Rscript --vanilla /tmp/install_packages.R /tmp/packages.lock.tsv
 RUN python3 -m venv /opt/venv
 COPY requirements.lock ./
 RUN pip install --require-hashes -r requirements.lock \

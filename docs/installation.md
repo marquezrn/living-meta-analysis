@@ -2,7 +2,7 @@
 
 Python 3.12 is the tested interpreter. Install the hash-locked requirements,
 `hatchling==1.32.4`, and the package as shown in the README. Build the interface
-with pnpm 11.19.0 and Node >=22.13. Start the server from the repository root so
+with pnpm 11.19.0 and Node 24.19.0. Start the server from the repository root so
 `web/dist` is found. No credentials are needed to inspect PDFs or run offline tests.
 
 The direct local installation uses SQLite, a private local artifact directory,

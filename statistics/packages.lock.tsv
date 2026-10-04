@@ -1,0 +1,16 @@
+# Exact versions observed in the successful scientific-container verification.
+# Install in this dependency order; recommended packages come from pinned R 4.5.1.
+package	version
+jsonlite	2.0.0
+mathjaxr	2.0-0
+digest	0.6.39
+pbapply	1.7-5
+numDeriv	2016.8-1.1
+metadat	1.6-0
+metafor	4.8-0
+rlang	1.3.0
+cli	3.6.6
+zoo	1.9-1
+lifecycle	1.0.5
+sandwich	3.1-3
+clubSandwich	0.6.1

@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: {node-version: '22.20.0'}
+        with: {node-version: '24.19.0'}
       - run: npm install --global pnpm@11.19.0
       - run: pnpm install --frozen-lockfile
         working-directory: web

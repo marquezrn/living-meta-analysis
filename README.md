@@ -35,7 +35,7 @@ Original PDFs and reference answers are not distributed here.
 
 ## Start locally
 
-Use Python **3.12**, Node **22.13 or newer**, and pnpm **11.19.0**.
+Use Python **3.12**, Node **24.19.0**, and pnpm **11.19.0**.
 
 ```sh
 python3.12 -m venv .venv

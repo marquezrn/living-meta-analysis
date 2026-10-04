@@ -81,6 +81,9 @@ inspected with the imported 59-source corpus and an explicitly unexecuted benchm
 GitHub has additionally passed the PostgreSQL concurrency checks, the production
 container build, exact R/package version assertions, and all 17 statistical
 reference checks. The workflow badge links to verification for the current commit.
+The [verified release run](https://github.com/marquezrn/living-meta-analysis/actions/runs/37191366690)
+passed 126 Python tests (one host-only R skip), 19 frontend tests, and all 17 R
+statistical reference tests in the production container.
 
 Follow the [reproducible evaluation procedure](evaluation.md) to execute a blinded
 extraction, compare DOI and conditions, retain ambiguous matches, and independently
