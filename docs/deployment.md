@@ -1,3 +1,7 @@
+> **Legacy hosted edition.** This document is preserved for optional compatibility.
+> Render/R2 onboarding has stopped. Use [local installation](installation.md) for
+> the default downloadable edition. No service provisioning is required.
+
 # Render deployment and secure connections
 
 The public code repository and the private research application are separate.

@@ -15,12 +15,13 @@ export default function PlotCanvas({ data, layout, onPoint }: { data: Data[]; la
       const Plotly = module.default;
       const target = element.current;
       const chart = await Plotly.newPlot(target, data, {
-        paper_bgcolor: '#111e30', plot_bgcolor: '#111e30',
-        font: { family: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif', color: '#adbed2', size: 12 },
+        paper_bgcolor: '#ffffff', plot_bgcolor: '#ffffff',
+        colorway: ['#0969da', '#bf5b04', '#8250df', '#1a7f37'],
         margin: { l: 65, r: 28, t: 26, b: 100 }, height: 420,
-        xaxis: { gridcolor: '#223148', zerolinecolor: '#31445a', automargin: true },
-        yaxis: { gridcolor: '#223148', zerolinecolor: '#31445a', automargin: true },
         ...layout,
+        font: { family: '-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif', color: '#57606a', size: 13, ...layout?.font },
+        xaxis: { gridcolor: '#d8dee4', zerolinecolor: '#8c959f', automargin: true, ...layout?.xaxis },
+        yaxis: { gridcolor: '#d8dee4', zerolinecolor: '#8c959f', automargin: true, ...layout?.yaxis },
       }, { responsive: true, displaylogo: false, modeBarButtonsToRemove: ['lasso2d', 'select2d'], toImageButtonOptions: { format: 'png', filename: 'living-meta-analysis', scale: 2 } });
       if (disposed) { Plotly.purge(target); return; }
       if (onPoint) chart.on('plotly_click', event => { const point = event.points[0]; if (typeof point?.customdata === 'number') onPoint(point.customdata); });

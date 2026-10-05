@@ -4,11 +4,11 @@ import json
 import re
 from pathlib import Path
 
-ROOT_FILES = {"README.md", "LICENSE", "CITATION.cff", "THIRD_PARTY_NOTICES.md", "pyproject.toml",
-    "requirements.lock", "Dockerfile", "compose.yaml", "render.yaml", "alembic.ini", ".gitignore",
+ROOT_FILES = {"README.md", "AGENTS.md", "LICENSE", "CITATION.cff", "THIRD_PARTY_NOTICES.md", "pyproject.toml",
+    "requirements.lock", "requirements-core.lock", "Dockerfile", "compose.yaml", "render.yaml", "alembic.ini", ".gitignore",
     ".dockerignore", ".env.example"}
 ROOT_DIRS = {"src", "tests", "docs", "protocols", "statistics", "migrations", "scripts", "evaluation", ".github"}
-WEB_FILES = {"web/package.json", "web/pnpm-lock.yaml", "web/index.html", "web/tsconfig.json", "web/vite.config.ts", "web/.gitignore"}
+WEB_FILES = {"web/package.json", "web/pnpm-lock.yaml", "web/index.html", "web/tsconfig.json", "web/vite.config.ts", "web/.gitignore", "web/public/.nojekyll"}
 EXCLUDED = {"private", "data", ".venv", "node_modules", "dist", "build", ".git", "__pycache__",
             ".pytest_cache", ".ruff_cache"}
 SOURCE_EXTENSIONS = {".pdf", ".docx", ".xlsx", ".png", ".jpg", ".jpeg", ".tif", ".parquet", ".sqlite", ".db", ".whl"}
@@ -25,7 +25,7 @@ def publication_files(root: Path):
         if any(part in EXCLUDED or part.endswith(".egg-info") for part in relative.parts):
             continue
         name = relative.as_posix()
-        selected = name in ROOT_FILES or relative.parts[0] in ROOT_DIRS or name in WEB_FILES or name.startswith("web/src/")
+        selected = name in ROOT_FILES or relative.parts[0] in ROOT_DIRS or name in WEB_FILES or name.startswith(("web/src/", "web/report/", "web/test/"))
         if not selected:
             continue
         if path.is_symlink() or path.suffix.lower() in SOURCE_EXTENSIONS or (path.name.startswith(".env") and name != ".env.example"):

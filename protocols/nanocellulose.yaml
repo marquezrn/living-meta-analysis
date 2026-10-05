@@ -10,7 +10,7 @@ exclusion:
 analysis_mode: descriptive
 outcome: Droplet_Size_um
 effect_measure: MD
-enabled_sources: [openalex, crossref, pubmed, europepmc]
+enabled_sources: [pubmed, europepmc, crossref]
 queries:
   openalex: 'Pickering nanocellulose'
   crossref: 'Pickering nanocellulose'

@@ -33,11 +33,16 @@ def reconcile_citations(citations: list[Citation]) -> list[Citation]:
         return parent[key]
 
     def key(citation: Citation) -> str:
-        return citation.doi or f"{citation.source}:{citation.source_id}"
+        return citation.doi or (f"pmid:{citation.pmid}" if citation.pmid else
+                                f"pmcid:{citation.pmcid}" if citation.pmcid else f"{citation.source}:{citation.source_id}")
 
     for citation in citations:
         citation.doi = canonical_doi(citation.doi)
         root = find(key(citation))
+        for identifier in (f"pmid:{citation.pmid}" if citation.pmid else None,
+                           f"pmcid:{citation.pmcid}" if citation.pmcid else None):
+            if identifier:
+                parent[find(identifier)] = root
         for related in citation.related_dois:
             if (doi := canonical_doi(related)):
                 parent[find(doi)] = root
@@ -49,9 +54,23 @@ def reconcile_citations(citations: list[Citation]) -> list[Citation]:
         ordered = sorted(group, key=lambda c: (c.is_preprint, not bool(c.doi), not bool(c.abstract)))
         chosen = ordered[0].model_copy(deep=True)
         # A retracted preprint does not automatically retract a distinct journal version.
-        same_version = [c for c in group if c.doi == chosen.doi] if chosen.doi else [chosen]
+        same_version = [c for c in group if c.doi == chosen.doi]
+        # Identifier-only records may join through another provider's exact alias.
+        while True:
+            pmids = {c.pmid for c in same_version if c.pmid}
+            pmcids = {c.pmcid for c in same_version if c.pmcid}
+            additions = [c for c in group if c not in same_version and not c.doi and
+                         ((c.pmid and c.pmid in pmids) or (c.pmcid and c.pmcid in pmcids))]
+            if not additions:
+                break
+            same_version.extend(additions)
         for other in same_version:
             chosen.status = preserve_status(chosen.status, other.status)
+        chosen.pmid = chosen.pmid or next((c.pmid for c in same_version if c.pmid), None)
+        chosen.pmcid = chosen.pmcid or next((c.pmcid for c in same_version if c.pmcid), None)
+        chosen.license = chosen.license or next((c.license for c in same_version if c.license), None)
+        relations = {str(r.model_dump()): r for c in same_version for r in c.update_relations}
+        chosen.update_relations = list(relations.values())
         chosen.abstract = chosen.abstract or next((c.abstract for c in group if c.abstract), None)
         chosen.full_text_url = chosen.full_text_url or next(
             (c.full_text_url for c in same_version if c.full_text_url), None

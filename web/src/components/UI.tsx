@@ -1,6 +1,8 @@
 import { AlertCircle, Check, ChevronDown, FileSearch, LoaderCircle, X } from 'lucide-react';
+import { useRef } from 'react';
 import type { ReactNode } from 'react';
 import { humanize } from '../utils';
+import { useFocusBoundary } from './useFocusBoundary';
 
 export function Spinner({ label = 'Loading' }: { label?: string }) { return <span className="loading" role="status"><LoaderCircle className="spin" size={18} />{label}</span>; }
 export function Badge({ value }: { value: string }) { return <span className={`badge badge-${value.replaceAll(' ', '_')}`}>{humanize(value)}</span>; }
@@ -11,10 +13,12 @@ export function PageHeader({ eyebrow, title, children, action }: { eyebrow: stri
   return <div className="page-header"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1>{children && <p>{children}</p>}</div>{action && <div className="page-actions">{action}</div>}</div>;
 }
 export function Notice({ children, kind = 'info' }: { children: ReactNode; kind?: 'info' | 'warning' | 'success' }) {
-  return <div className={`notice notice-${kind}`}><span>{kind === 'success' ? <Check size={17} /> : <AlertCircle size={17} />}</span><div>{children}</div></div>;
+  return <div className={`notice notice-${kind}`} role={kind === 'warning' ? 'alert' : 'status'}><span>{kind === 'success' ? <Check size={17} /> : <AlertCircle size={17} />}</span><div>{children}</div></div>;
 }
 export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
-  return <div className="modal-backdrop" onClick={onClose}><section className="modal" role="dialog" aria-modal="true" aria-label={title} onClick={e => e.stopPropagation()} onKeyDown={e => { if (e.key === 'Escape') onClose(); }}><div className="modal-heading"><h2>{title}</h2><button className="icon-button" aria-label="Close dialog" onClick={onClose}><X size={21} /></button></div>{children}</section></div>;
+  const boundary = useRef<HTMLElement>(null);
+  useFocusBoundary(boundary, { onClose });
+  return <div className="modal-backdrop" onClick={onClose}><section ref={boundary} tabIndex={-1} className="modal" role="dialog" aria-modal="true" aria-label={title} onClick={e => e.stopPropagation()}><div className="modal-heading"><h2>{title}</h2><button className="icon-button" aria-label="Close dialog" onClick={onClose}><X size={21} /></button></div>{children}</section></div>;
 }
 export function JsonDetails({ value, label = 'Inspect returned details' }: { value: unknown; label?: string }) {
   if (value == null) return null;

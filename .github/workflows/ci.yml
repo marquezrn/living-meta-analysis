@@ -6,6 +6,28 @@ on:
 permissions:
   contents: read
 jobs:
+  local-core:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+        python: ['3.12', '3.13', '3.14']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '${{ matrix.python }}'}
+      - run: python -m pip install --require-hashes -r requirements-core.lock
+      - run: python -m pip install build==1.6.1 hatchling==1.32.4
+      - run: python -m build --no-isolation --wheel
+      - name: Install the wheel without hosted dependencies
+        shell: bash
+        run: python -m pip install --no-deps --no-index dist/*.whl
+      - run: python -m livingmeta.cli doctor
+      - name: Deterministic workflow with network creation blocked
+        run: python scripts/local_smoke.py
+      - name: Verify packaged report and scientific resources
+        run: python -c "from importlib.resources import files; r=files('livingmeta'); assert all(r.joinpath(p).is_file() for p in ['report_assets/reader.js','report_assets/reader.css','report_assets/NOTICES.txt','protocols/nanocellulose.yaml','statistics/meta_analysis.R','statistics/packages.lock.tsv'])"
   python:
     runs-on: ubuntu-24.04
     services:

@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "Please cite this software and the original studies used in your research."
 type: software
 title: "Living Meta-Analysis: evidence-preserving agent workflows for chemistry and chemical engineering"
-version: 0.1.0
+version: 0.2.0
 date-released: 2026-10-04
 authors:
   - family-names: Marquez Contreras

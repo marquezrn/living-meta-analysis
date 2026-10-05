@@ -523,9 +523,16 @@ def create_app(settings: Settings | None = None, *, dispatch=None):
             _, project, _ = require_project(request, db, project_id)
             data = [Experiment.model_validate(e) for e in current_experiments(db, project_id)]
             result = descriptive(data, Protocol.model_validate(project.protocol))
-            result["synthesis_stale"] = project.synthesis_stale or pending_count(db, project_id) > 0
+            unresolved = db.scalar(select(func.count()).select_from(Document).where(Document.project_id == project_id,
+                Document.status.in_(("uploaded", "extracting", "failed", "stale", "quarantined")))) or 0
+            result["synthesis_stale"] = bool(project.synthesis_stale or pending_count(db, project_id) or unresolved)
             result["last_synthesis_update"] = project.last_synthesis_update
-            result["inferential_result"] = project.synthesis.get("inferential")
+            inference = project.synthesis.get("inferential")
+            inference_stale = bool(inference is not None and (result["synthesis_stale"] or
+                project.synthesis.get("inferential_protocol") != project.protocol))
+            result["inferential_stale"] = inference_stale
+            result["inferential_result"] = None if inference_stale else inference
+            result["historical_inferential_result"] = inference if inference_stale else None
             return result
 
     @app.post("/api/v1/projects/{project_id}/analysis")
@@ -553,13 +560,25 @@ def create_app(settings: Settings | None = None, *, dispatch=None):
             completed = not body.contrasts or result.get("status") == "completed"
             project.synthesis = {**project.synthesis, "latest_analysis_attempt": result}
             if completed:
-                project.synthesis = {**project.synthesis, "inferential" if body.contrasts else "descriptive": result}
+                previous_inference = project.synthesis.get("inferential")
+                if previous_inference is not None:
+                    audit(db, "synthesis_superseded", project_id, user.id, kind="inferential",
+                          result=previous_inference, protocol=project.synthesis.get("inferential_protocol"),
+                          reason="inferential_update" if body.contrasts else "descriptive_update")
+                current = {key: value for key, value in project.synthesis.items()
+                           if key not in ("inferential", "inferential_protocol")}
+                if body.contrasts:
+                    current.update(inferential=result, inferential_protocol=protocol.model_dump(mode="json"))
+                else:
+                    current["descriptive"] = result
+                project.synthesis = current
                 project.last_synthesis_update = utcnow()
             unresolved = db.scalar(select(func.count()).select_from(Document).where(Document.project_id == project_id,
                 Document.status.in_(("uploaded", "extracting", "failed", "stale", "quarantined")))) or 0
             if completed:
                 project.synthesis_stale = bool(pending_count(db, project_id) or unresolved)
-            audit(db, "synthesis_updated", project_id, user.id, mode=protocol.analysis_mode, status=result.get("status"))
+            audit(db, "synthesis_updated", project_id, user.id, mode="inferential" if body.contrasts else "descriptive",
+                  status=result.get("status"), result=result)
             db.commit()
             return result
 

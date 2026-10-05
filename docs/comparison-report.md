@@ -1,6 +1,6 @@
 # Pickering emulsion retrospective comparison
 
-Report date: 2026-10-04. Status: **source scope audited; paid extraction and independent accuracy evaluation not run**.
+Report date: 2026-10-04. Status: **source scope audited; local edition implemented; primary-paper extraction and independent accuracy evaluation not run**.
 
 The comparator is the original literal dataset in Ronald Marquez Contreras's
 [published nanocellulose Pickering emulsion explorer](https://github.com/marquezrn03/Pickering-Emulsions-Tappi-Nano-2025/).
@@ -63,8 +63,9 @@ must not count as an extraction failure:
 | Numerical error by field and unit | Not evaluated | Report measured distribution |
 | Abstentions and page/table/figure coverage | Not evaluated | Report all attempted sources |
 | Verified additions beyond manual extraction | Not evaluated | Primary-source adjudication |
-| Paid OpenAI evaluation calls | 0 | Owner-initiated only |
-| OpenAI evaluation expenditure | USD 0 | USD 100 total ceiling |
+| Separate paid OpenAI API evaluation calls | 0 | Excluded from the local workflow |
+| Separate paid API evaluation expenditure | USD 0 | Legacy USD 100 ceiling if explicitly enabled |
+| Existing-account agent usage | Synthetic pilot paused at account limit | Record reported usage; no inferred dollar cost |
 
 Offline synthetic tests verify software behavior: permissions, budget accounting,
 checkpoint recovery, figure calibration, dimensional conversions, unsupported
@@ -73,19 +74,32 @@ They are not measurements of model extraction quality. The local host has no R
 engine or Docker; GitHub's container check requires the pinned R engine and runs
 its integration test. Repository CI records the verification status for each commit.
 
-Local release verification: **124 Python tests passed; 3 skipped** (two PostgreSQL
-concurrency checks and the pinned R integration check). **19 frontend tests passed**;
-type checking, production build, Python linting, wheel packaging, fresh SQLite
-migration and publication allowlist checks passed. The private interface was
-inspected with the imported 59-source corpus and an explicitly unexecuted benchmark.
-GitHub has additionally passed the PostgreSQL concurrency checks, the production
-container build, exact R/package version assertions, and all 17 statistical
-reference checks. The workflow badge links to verification for the current commit.
-The [verified release run](https://github.com/marquezrn/living-meta-analysis/actions/runs/37191366690)
-passed 126 Python tests (one host-only R skip), 19 frontend tests, and all 17 R
-statistical reference tests in the production container.
+Local edition verification (October 5, 2026): **232 Python tests passed; 3 skipped**
+(two PostgreSQL checks and the pinned R host integration check). **53 frontend tests
+passed**, including standalone reader startup with network and eval blocked. Python
+linting, TypeScript checking, the preserved static demo build, wheel construction,
+and a fresh core-only wheel install passed. The deterministic synthetic workflow
+completed preparation, verification, descriptive synthesis, and HTML/JSON/CSV/Parquet
+exports with network creation blocked and no hosted SDK imports. Additional release
+checks are recorded in CI for each published revision.
 
-Follow the [reproducible evaluation procedure](evaluation.md) to execute a blinded
+The real Codex transport authenticated through ChatGPT and paused cleanly at the
+account usage limit without API fallback. After reset, three native screening,
+text/table, and verification jobs recovered the synthetic fixture means (7 and 5 um),
+SDs (1 and 0.5 um), and independent n=3 for both arms. Unreported fields remained
+abstained. This is successful native transport/fixture validation; extraction accuracy
+on primary papers remains unmeasured. See [machine-readable software results](../evaluation/local_validation.json). The native browser policy prevented
+visual inspection through `file://`; automated file-URL DOM tests passed, but they
+do not replace desktop visual verification. Cross-platform core installation jobs
+are configured in CI; their results must be checked before claiming those platforms
+verified. Connector requests were mocked, so live provider coverage is unmeasured.
+
+The earlier hosted release's
+[verification run](https://github.com/marquezrn/living-meta-analysis/actions/runs/37191366690)
+passed its PostgreSQL concurrency and pinned R container checks. That historical
+result does not validate new local code or establish extraction performance.
+
+Follow the [reproducible evaluation procedure](evaluation.md) to execute an isolated
 extraction, compare DOI and conditions, retain ambiguous matches, and independently
 adjudicate against primary sources. Report agreement with manual extraction until
 adjudication is complete. Publish denominators, family-level uncertainty, source

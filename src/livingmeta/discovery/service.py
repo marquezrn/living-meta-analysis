@@ -13,7 +13,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 from livingmeta.discovery.identity import canonical_doi, preserve_status, reconcile_citations
-from livingmeta.domain import Citation, Protocol
+from livingmeta.domain import Citation, Protocol, PublicationUpdate
 
 
 class DiscoveryResult(BaseModel):
@@ -34,7 +34,7 @@ class ProviderClient:
     _locks: dict[str, asyncio.Lock] = {}
     _next: dict[str, float] = {}
     intervals = {"pubmed": 0.35, "arxiv": 3.1, "crossref": 1.1, "openalex": 0.12,
-                 "europepmc": 0.2, "scopus": 0.5, "unpaywall": 0.1, "pmc": 0.2}
+                 "europepmc": 1.0, "scopus": 0.5, "unpaywall": 0.1, "pmc": 0.2}
 
     def __init__(self, credentials: dict[str, str], transport: httpx.AsyncBaseTransport | None = None):
         self.credentials = credentials
@@ -56,6 +56,46 @@ class ProviderClient:
 
     async def _pace(self, source: str):
         interval = self.intervals[source]
+        if self.credentials.get("pace_directory"):
+            # Local processes share provider slots without Redis or a database service.
+            from pathlib import Path
+
+            def reserve_slot():
+                directory = Path(self.credentials["pace_directory"])
+                directory.mkdir(parents=True, exist_ok=True)
+                with (directory / f"{source}.pace").open("a+", encoding="utf-8") as handle:
+                    try:
+                        import fcntl
+                    except ImportError:
+                        import msvcrt
+                        if handle.tell() == 0:
+                            handle.write("0")
+                            handle.flush()
+                        handle.seek(0)
+                        msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+                    else:
+                        fcntl.flock(handle, fcntl.LOCK_EX)
+                    handle.seek(0)
+                    try:
+                        previous = float(handle.read() or "0")
+                    except ValueError:
+                        previous = 0
+                    now = time.time()
+                    slot = max(now, previous)
+                    handle.seek(0)
+                    handle.truncate()
+                    handle.write(str(slot + interval))
+                    handle.flush()
+                    handle.seek(0)
+                    if "msvcrt" in locals():
+                        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+                    else:
+                        fcntl.flock(handle, fcntl.LOCK_UN)
+                    return slot - now
+            delay = await asyncio.to_thread(reserve_slot)
+            if delay > 0:
+                await asyncio.sleep(delay)
+            return
         if self.redis:
             # Acquire a provider-wide slot atomically using server time, avoiding clock skew.
             script = """local t=redis.call('TIME'); local n=t[1]*1000+t[2]/1000;
@@ -72,10 +112,22 @@ class ProviderClient:
                 await asyncio.sleep(delay)
             self._next[source] = time.monotonic() + interval
 
-    async def get(self, source: str, url: str, **kwargs) -> httpx.Response:
+    async def get(self, source: str, url: str, *, max_bytes: int | None = None, **kwargs) -> httpx.Response:
         for attempt in range(4):
             await self._pace(source)
-            response = await self.client.get(url, **kwargs)
+            if max_bytes is None:
+                response = await self.client.get(url, **kwargs)
+            else:
+                async with self.client.stream("GET", url, **kwargs) as streamed:
+                    if int(streamed.headers.get("content-length", "0")) > max_bytes:
+                        raise SourceUnavailable(f"{source}: download size limit exceeded")
+                    content = bytearray()
+                    async for chunk in streamed.aiter_bytes():
+                        content.extend(chunk)
+                        if len(content) > max_bytes:
+                            raise SourceUnavailable(f"{source}: download size limit exceeded")
+                    response = httpx.Response(streamed.status_code, headers=streamed.headers,
+                                              content=bytes(content), request=streamed.request)
             if response.status_code not in (429, 502, 503, 504):
                 # Do not include URLs or bodies that can contain credential query parameters.
                 if response.status_code >= 400:
@@ -129,11 +181,14 @@ def _crossref(item: dict, updates: dict) -> Citation:
         related.extend(canonical_doi(r.get("id")) for r in item.get("relation", {}).get(relationship, [])
                        if canonical_doi(r.get("id")))
     status = "active"
+    relationships = []
     for update in item.get("update-to", []):
         kind = {"retraction": "retracted", "correction": "corrected",
                 "expression-of-concern": "concern", "withdrawal": "withdrawn"}.get(update.get("type"))
         target = canonical_doi(update.get("DOI"))
         if kind and target:
+            relationships.append(PublicationUpdate(relation=update["type"], direction="updates",
+                                                    status=kind, target_doi=target))
             updates[target] = preserve_status(updates.get(target, "active"), kind)
             if target == doi:
                 status = preserve_status(status, kind)
@@ -144,7 +199,8 @@ def _crossref(item: dict, updates: dict) -> Citation:
                              for a in item.get("author", [])], year=dates[0][0] if dates[0] else None,
                     url=item.get("URL"), abstract=item.get("abstract"),
                     is_preprint=item.get("type") == "posted-content", related_dois=related,
-                    updated_at=item.get("indexed", {}).get("date-time"), status=status)
+                    updated_at=item.get("indexed", {}).get("date-time"), status=status,
+                    update_relations=relationships)
 
 
 def _pubmed(xml: str) -> list[Citation]:
@@ -157,18 +213,31 @@ def _pubmed(xml: str) -> list[Citation]:
         pmid = _text(citation.find("PMID"))
         ids = article.findall("PubmedData/ArticleIdList/ArticleId")
         doi = next((canonical_doi(_text(i)) for i in ids if i.get("IdType") == "doi"), None)
+        pmcid = next((_text(i) for i in ids if i.get("IdType") == "pmc"), None)
         status = "active"
+        relationships = []
         for correction in citation.findall("CommentsCorrectionsList/CommentsCorrections"):
             kind = {"RetractionIn": "retracted", "ExpressionOfConcernIn": "concern",
-                    "ErratumIn": "corrected", "RetractedandRepublishedIn": "retracted"}.get(
+                    "ErratumIn": "corrected", "RetractedandRepublishedIn": "retracted",
+                    "CorrectedandRepublishedIn": "corrected", "UpdateIn": "corrected"}.get(
                         correction.get("RefType"))
             if kind:
                 status = preserve_status(status, kind)
+            relation = correction.get("RefType", "")
+            outgoing = {"RetractionOf": "retracted", "ExpressionOfConcernFor": "concern",
+                        "ErratumFor": "corrected", "RetractedandRepublishedFrom": "retracted",
+                        "CorrectedandRepublishedFrom": "corrected", "UpdateOf": "corrected"}.get(relation)
+            target = _text(correction.find("PMID"))
+            if target and (kind or outgoing):
+                relationships.append(PublicationUpdate(relation=relation, direction="updated_by" if kind else "updates",
+                    status=kind or outgoing, target_pmid=target))
         pubtypes = [_text(t).lower() for t in citation.findall("Article/PublicationTypeList/PublicationType")]
         if "retracted publication" in pubtypes:
             status = "retracted"
         year_text = _text(citation.find("Article/Journal/JournalIssue/PubDate/Year"))
-        result.append(Citation(source="pubmed", source_id=pmid, doi=doi,
+        revised = citation.find("DateRevised")
+        revised_parts = [_text(revised.find(k)) for k in ("Year", "Month", "Day")] if revised is not None else []
+        result.append(Citation(source="pubmed", source_id=pmid, doi=doi, pmid=pmid, pmcid=pmcid,
                                title=_text(citation.find("Article/ArticleTitle")),
                                authors=[" ".join(filter(None, (_text(a.find("ForeName")),
                                                                 _text(a.find("LastName")))))
@@ -176,7 +245,8 @@ def _pubmed(xml: str) -> list[Citation]:
                                abstract="\n".join(_text(t) for t in citation.findall("Article/Abstract/AbstractText")),
                                year=int(year_text) if year_text.isdigit() else None,
                                url=f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/", status=status,
-                               is_preprint="preprint" in pubtypes))
+                               is_preprint="preprint" in pubtypes, update_relations=relationships,
+                               updated_at="-".join(revised_parts) if all(revised_parts) and revised_parts else None))
     return result
 
 
@@ -184,6 +254,9 @@ def _europepmc(item: dict) -> Citation:
     oa_urls = item.get("fullTextUrlList", {}).get("fullTextUrl", [])
     oa = next((u for u in oa_urls if u.get("availabilityCode") == "OA"), {})
     return Citation(source="europepmc", source_id=f"{item.get('source')}:{item['id']}",
+                    pmid=str(item["id"]) if item.get("source") == "MED" else None,
+                    pmcid=item.get("pmcid") or (str(item["id"]) if str(item["id"]).startswith("PMC") else
+                                               f"PMC{item['id']}" if item.get("source") == "PMC" and str(item["id"]).isdigit() else None),
                     doi=canonical_doi(item.get("doi")), title=item.get("title") or "Untitled record",
                     authors=[a.get("fullName", "") for a in item.get("authorList", {}).get("author", [])],
                     abstract=item.get("abstractText"), year=int(item["pubYear"]) if item.get("pubYear") else None,
@@ -257,6 +330,8 @@ async def _page(source: str, query: str, state: dict, client: ProviderClient,
         if not ids:
             return [], None, True, "full topic reconciliation (entries and corrections)"
         fetch = {"db": "pubmed", "id": ",".join(ids), "retmode": "xml", "tool": "livingmeta"}
+        if credentials.get("contact_email"):
+            fetch["email"] = credentials["contact_email"]
         if credentials.get("pubmed_api_key"):
             fetch["api_key"] = credentials["pubmed_api_key"]
         xml = (await client.get(source, "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi",

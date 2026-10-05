@@ -1,0 +1,92 @@
+{
+  "schema_version": 2,
+  "validation_kind": "software_and_synthetic_fixture_only",
+  "reported_date": "2026-10-05",
+  "python": {
+    "passed": 232,
+    "skipped": 3,
+    "skip_reasons": [
+      "Dedicated PostgreSQL unavailable (two tests)",
+      "Pinned R unavailable on this host (one test)"
+    ]
+  },
+  "frontend": {
+    "passed": 53,
+    "file_url_dom_test": true,
+    "native_file_url_visual_verification": false
+  },
+  "core_installation": {
+    "wheel_install_without_network": true,
+    "deterministic_processing_network_blocked": true,
+    "hosted_dependency_imports": false,
+    "exports": [
+      "HTML",
+      "JSON",
+      "CSV",
+      "Parquet"
+    ],
+    "verified_runtime": "Python 3.12 macOS"
+  },
+  "native_codex": {
+    "authentication": "chatgpt",
+    "cli_version": "0.160.0",
+    "successful_jobs": 3,
+    "phases": [
+      "screening",
+      "text_table",
+      "verification"
+    ],
+    "result": "completed_with_abstentions",
+    "fixture_sha256": "ed484196318946af1bef0738b98486119d77ce5b8bf6762751bfa26f6ebbc3e0",
+    "expected_and_recovered_means_um": [
+      7,
+      5
+    ],
+    "sd_um": [
+      1,
+      0.5
+    ],
+    "independent_n": [
+      3,
+      3
+    ],
+    "usage": [
+      {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 16640,
+        "input_tokens": 37765,
+        "output_tokens": 280,
+        "reasoning_output_tokens": 17
+      },
+      {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 17073,
+        "output_tokens": 1151,
+        "reasoning_output_tokens": 30
+      },
+      {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 16486,
+        "output_tokens": 180,
+        "reasoning_output_tokens": 48
+      }
+    ],
+    "monetary_cost": null,
+    "api_key_fallback": false,
+    "unreported_fields": "abstained",
+    "blinding": "unblinded",
+    "prior_account_limit_pause_verified": true
+  },
+  "primary_paper_accuracy": {
+    "status": "not_evaluated",
+    "precision_target": 0.98,
+    "text_table_recall_target": 0.95,
+    "figure_recall_target": 0.9
+  },
+  "optional_discovery": {
+    "tests": "mocked_providers",
+    "live_coverage": "not_measured"
+  }
+}

@@ -1,4 +1,21 @@
-# OpenAI evaluation budget
+# Agent account usage and optional legacy API budget
+
+The default local edition invokes an existing ChatGPT-authenticated Codex client.
+It strips API-key environment variables, forces ChatGPT sign-in, and pauses on
+authentication or usage-limit failures. It never purchases credits, changes plans,
+or switches billing modes. Existing account allowances and any account-level credit
+arrangements still apply. Available token usage is recorded, while unknown monetary
+cost remains null. A network connection is needed for cloud inference.
+
+Local preparation, deterministic validation, descriptive synthesis, export and HTML
+viewing use no model. Optional metadata monitoring also uses no model. Bounded
+attempts, concurrency and --max-jobs limit execution; they are not a dollar budget
+for account-authenticated inference. See [Codex authentication](https://learn.chatgpt.com/docs/auth).
+
+The following ledger is retained only for the explicitly enabled legacy hosted/API
+edition. It is not loaded by local commands.
+
+## Legacy USD 100 evaluation ledger
 
 The application enforces one shared initial allowance of USD 100, across all projects
 and runs. Run-specific allowances cannot exceed it. PostgreSQL row locks and SQLite

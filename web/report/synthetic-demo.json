@@ -1,0 +1,192 @@
+{
+  "schema_version": 2,
+  "project": {
+    "name": "Synthetic offline demonstration"
+  },
+  "protocol": {
+    "name": "Synthetic interface protocol",
+    "version": "1.0",
+    "topic": "Fictional observations for reader verification",
+    "variables": [
+      "droplet_diameter"
+    ],
+    "inclusion": [
+      "Synthetic fixtures only"
+    ],
+    "exclusion": [
+      "All real research conclusions"
+    ]
+  },
+  "freshness": {
+    "synthesis_stale": true
+  },
+  "documents": [
+    {
+      "id": "synthetic-document",
+      "filename": "offline-demo-source.pdf",
+      "sha256": "55f812c19ae4dfc6f533058380d2d2031d62e370ff71750c0c25c33435ba47a0",
+      "status": "synthetic",
+      "pages": 1
+    }
+  ],
+  "experiments": [
+    {
+      "id": "synthetic-experiment-1",
+      "sample_label": "Synthetic sample 1",
+      "study_family": "synthetic-family",
+      "doi": null,
+      "attributes": [
+        {
+          "name": "preparation",
+          "text": "Synthetic condition for interface testing",
+          "status": "candidate",
+          "evidence": []
+        }
+      ],
+      "measurements": [
+        {
+          "id": "synthetic-measurement-1",
+          "experiment_id": "synthetic-experiment-1",
+          "outcome": "droplet_diameter",
+          "raw_value": "5",
+          "value": 5,
+          "unit": "um",
+          "qualifier": "exact",
+          "status": "accepted",
+          "origin": "reported",
+          "statistic": "mean",
+          "measurement_method": "Synthetic measurement method",
+          "uncertainty_type": "none",
+          "uncertainty": null,
+          "n_independent": null,
+          "n_technical": null,
+          "validation_notes": [
+            "Synthetic fixture accepted solely to exercise the report interface; not research evidence."
+          ],
+          "evidence": [
+            {
+              "document_hash": "55f812c19ae4dfc6f533058380d2d2031d62e370ff71750c0c25c33435ba47a0",
+              "page": 1,
+              "source_type": "text",
+              "locator": "Synthetic fixture",
+              "excerpt": "Synthetic sample diameter 5 um."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "synthetic-experiment-2",
+      "sample_label": "Synthetic sample 2",
+      "study_family": "synthetic-family",
+      "doi": null,
+      "attributes": [
+        {
+          "name": "preparation",
+          "text": "Synthetic condition for interface testing",
+          "status": "candidate",
+          "evidence": []
+        }
+      ],
+      "measurements": [
+        {
+          "id": "synthetic-measurement-2",
+          "experiment_id": "synthetic-experiment-2",
+          "outcome": "droplet_diameter",
+          "raw_value": "7",
+          "value": 7,
+          "unit": "um",
+          "qualifier": "exact",
+          "status": "accepted",
+          "origin": "reported",
+          "statistic": "mean",
+          "measurement_method": "Synthetic measurement method",
+          "uncertainty_type": "none",
+          "uncertainty": null,
+          "n_independent": null,
+          "n_technical": null,
+          "validation_notes": [
+            "Synthetic fixture accepted solely to exercise the report interface; not research evidence."
+          ],
+          "evidence": [
+            {
+              "document_hash": "55f812c19ae4dfc6f533058380d2d2031d62e370ff71750c0c25c33435ba47a0",
+              "page": 1,
+              "source_type": "text",
+              "locator": "Synthetic fixture",
+              "excerpt": "Synthetic sample diameter 7 um."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "synthetic-experiment-3",
+      "sample_label": "Synthetic sample 3",
+      "study_family": "synthetic-family",
+      "doi": null,
+      "attributes": [
+        {
+          "name": "preparation",
+          "text": "Synthetic condition for interface testing",
+          "status": "candidate",
+          "evidence": []
+        }
+      ],
+      "measurements": [
+        {
+          "id": "synthetic-measurement-3",
+          "experiment_id": "synthetic-experiment-3",
+          "outcome": "droplet_diameter",
+          "raw_value": "9",
+          "value": 9,
+          "unit": "um",
+          "qualifier": "exact",
+          "status": "accepted",
+          "origin": "reported",
+          "statistic": "mean",
+          "measurement_method": "Synthetic measurement method",
+          "uncertainty_type": "none",
+          "uncertainty": null,
+          "n_independent": null,
+          "n_technical": null,
+          "validation_notes": [
+            "Synthetic fixture accepted solely to exercise the report interface; not research evidence."
+          ],
+          "evidence": [
+            {
+              "document_hash": "55f812c19ae4dfc6f533058380d2d2031d62e370ff71750c0c25c33435ba47a0",
+              "page": 1,
+              "source_type": "text",
+              "locator": "Synthetic fixture",
+              "excerpt": "Synthetic sample diameter 9 um."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "publications": [],
+  "coverage": {
+    "status": "synthetic",
+    "note": "No real papers were evaluated"
+  },
+  "synthesis": {
+    "status": "not_run",
+    "limitations": [
+      "Synthetic data cannot establish scientific conclusions"
+    ]
+  },
+  "benchmark": {
+    "status": "not_run",
+    "counts": {
+      "reference_rows": 0
+    }
+  },
+  "run": {
+    "status": "synthetic_fixture"
+  },
+  "provenance": {
+    "data_source": "All observations are invented for interface testing. No model calls or real research extraction occurred."
+  }
+}

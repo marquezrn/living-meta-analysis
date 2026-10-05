@@ -1,84 +1,69 @@
-# Architecture and execution contracts
+# Local architecture and versioned interfaces
 
-React/TypeScript serves a private workspace through the FastAPI application.
-PostgreSQL stores scientific payloads, memberships, jobs, checkpoints, publication
-state and cost reservations. Celery runs bounded extraction tasks through a
-Redis-compatible queue. R2 contains private immutable source and evidence objects.
-Local SQLite and filesystem storage are explicitly development alternatives.
+The default interface is the `livingmeta` CLI and version **2** file contracts.
+No API server, database, queue service, cloud storage, or provider SDK is imported by
+the local engine. The optional hosted application retains its `/api/v1` contracts.
 
-```mermaid
-flowchart LR
-  UI[Private React workspace] --> API[Versioned FastAPI]
-  API --> DB[(PostgreSQL)]
-  API --> R2[(Private R2)]
-  API --> Queue[Celery queue]
-  Queue --> Worker[Extraction worker]
-  Worker --> Source[Primary PDF pages only]
-  Source --> Agents[Bounded specialist agents]
-  Agents --> Verify[Deterministic support checks]
-  Verify --> DB
-  Worker --> R2
-  DB --> Stats[Fixed R and metafor engine]
-  Cron[Hourly due check] --> Discovery[Metadata connectors]
-  Discovery --> DB
-```
+## Data flow
 
-## Bounded specialist workflow
+Primary-source folder → immutable source copies and inventory → screening jobs →
+text/table and figure jobs → deterministic normalization/source verification →
+independent specialist review → bounded discrepancy resolution → dataset →
+deterministic synthesis → offline HTML/JSON/CSV/Parquet.
 
-The coordinator performs screening against the registered protocol. The text/table
-specialist processes one source page at a time. The figure specialist proposes
-panels, printed ticks, markers and spatial calibration; deterministic routines
-calculate values and verification overlays. Normalization converts compatible
-dimensions while preserving originals. The verifier reviews the same page;
-discrepancy resolution can reject or flag values but cannot invent replacements.
+A private workspace contains `manifest.json`, `dataset.json`, immutable job requests,
+mutable claim state, candidate responses, source/render artifacts, and append-only
+`events.jsonl`. SHA-256 identities cover source bytes, job requests, inputs, protocol,
+and engine/prompt information. Atomic writes and OS file locks coordinate bounded
+workers without a database. Source and protocol changes invalidate dependent outputs.
 
-Agents have no web, shell, file or benchmark tools. Each SDK run is limited to one
-turn, output tokens and request timeout, with retries and sensitive tracing disabled.
-Only source pages, protocol instructions and current-page extraction candidates enter
-model context. Models cannot retrieve the private manual benchmark through the
-worker. Model agreement is not independent scientific adjudication.
+## Public file contracts
 
-Page/phase checkpoints include source hash, protocol hash and prompt version.
-The worker saves checkpoints and generated artifacts privately, resumes completed
-phases, records source-specific coverage and persists an immutable extraction snapshot.
-Run states distinguish completion, completion with abstentions, budget exhaustion,
-cancellation and failure. Scientific decisions and membership changes create audit events.
+- **Run manifest:** schema version, protocol snapshot/hash, source identity/format,
+  run state/reason, timestamps, checkpoints, actual coverage, literature state, and
+  synthesis freshness. Structural inventory is distinct from reviewed coverage.
+- **Job request:** immutable request ID/hash, phase, document hash, permitted relative
+  input/image paths and hashes, instructions, phase payload, and result JSON Schema.
+  A claim adds worker/token/attempt/expiry outside the immutable request hash.
+- **Agent response:** request ID/hash, claim token, result, and truthful runtime/model/
+  usage metadata. Responses are untrusted and may not dictate accepted status or paths.
+- **Evidence dataset:** publications, study families, experiments, conditions,
+  measurements, attributes, exact evidence locations, statuses, qualifiers, uncertainty,
+  independent/technical replication, and transformation provenance.
+- **Report snapshot:** protocol, documents/publications, dataset, coverage, synthesis,
+  benchmark state, run/provenance, and distinct metadata/extraction/synthesis dates.
 
-## Scientific hierarchy
+PDF evidence uses real page indices and geometry. XML uses explicit element locations;
+media uses source assets and calibration. Neither XML nor media invents a PDF page.
+DOI, PMID, PMCID, publication version, and directed update relationships remain explicit.
+Condition identity includes preparation context; a reused sample label alone cannot
+merge distinct experiments.
 
-Publication records preserve identifiers, versions, status notices and source metadata.
-Study families group DOI identity and explicit preprint/journal relationships.
-Experiments preserve source sample labels. Each sample condition exposes named
-attributes and linked measurement IDs through the condition contract. Measurement
-records preserve raw values, bounds, units, basis, statistic, method, time, uncertainty,
-independent/technical sample information and evidence locations. Conditions are a
-typed view of experiment attributes; repeated measurement times remain separate fields.
+`python scripts/schema_contracts.py` exports the local JSON schemas without hosting
+dependencies. `--hosted` exports the legacy OpenAPI document with hosted extras installed.
 
-The source remains eligible even when measurements cannot support inferential pooling.
-Retractions and concerns quarantine affected evidence; corrections invalidate its
-current use. Inactive evidence is excluded even if a historical measurement was accepted.
+## Agent transport
 
-## API surfaces
+Portable agents claim and submit file jobs. The Codex adapter invokes the existing
+CLI in fresh read-only contexts with schema-constrained final responses and image
+inputs. It checks ChatGPT authentication, removes API-key variables, and refuses
+alternate billing modes. Progress/usage are private event records; unknown monetary
+cost is null. Authentication/account-limit failures pause rather than fall back.
 
-All project reads require membership. Owner-only operations create projects, start
-paid runs, trigger discovery, invite collaborators and import benchmark references.
-Editors upload and review evidence, edit protocols and request supported synthesis.
-Readers view evidence and exports. Mutations check same-origin browser requests;
-sessions are server-side, hashed, expiring and secure over production HTTPS.
+## Offline report
 
-OpenAPI covers `/api/v1/projects`, protocols, documents, runs, experiments,
-conditions, study families, measurements, publications, analyses and benchmarks.
-Private object endpoints enforce project prefixes and membership. `contracts.py`
-defines response schemas, and `scripts/schema_contracts.py` exports them reproducibly.
+A dedicated read-only entry bundles classic JavaScript, CSS, React/Plotly, and safely
+escaped snapshot JSON into one HTML file. It does not load the hosted App, fetch API
+routes, import module chunks, or use a CDN. Explicit local-file selection creates
+temporary Blob previews after hash verification. Report opening never refreshes
+metadata or re-labels a stale synthesis current.
 
-## Limits that affect scientific claims
+## Optional sources and statistics
 
-Graph support is limited to calibrated Cartesian geometry and explicit spatial
-scales. Unsupported plots abstain. Figure and microscopy outputs require semantic
-adjudication. Independent n, SD, density, mass/volume bases and comparator identity
-are never filled from assumptions. A pinned statistical engine can be unavailable;
-that is an analysis limitation, not a license to substitute a different estimator.
+Explicit discovery uses public PubMed/Europe PMC/Crossref endpoints and permitted
+PMC distribution; arXiv is optional. Downloads preserve licenses and checksums and
+remain pending until extraction. Monitoring is metadata-only and has no agent access.
 
-Discovery completeness is provider-specific and bounded. Partial checks and pending
-evidence keep the synthesis stale. Software tests exercise synthetic reference cases;
-real extraction performance remains a separate primary-source evaluation.
+Descriptive calculations use deterministic Python functions. Eligible source-linked
+contrasts use the fixed R/metafor/clubSandwich engine; missing sampling information,
+compatibility, covariance, or engine availability produces a documented limitation.

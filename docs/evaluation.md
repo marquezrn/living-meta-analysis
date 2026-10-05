@@ -3,7 +3,7 @@
 This procedure separates software verification, agreement with the manual explorer,
 and independently adjudicated accuracy. None substitutes for the others.
 
-## Freeze and blind
+## Freeze and isolate
 
 1. Freeze the original literal `database` array from the supplied HTML. Record the
    HTML and canonical array SHA-256, source URL, date, 103 raw rows, 53 DOI and two
@@ -15,7 +15,7 @@ and independently adjudicated accuracy. None substitutes for the others.
    46 benchmark DOI and 91 raw rows, without ambiguous DOI matches. Report seven
    unavailable papers separately rather than treating their fields as extraction failures.
 3. Keep reference HTML, manuscripts, derived summaries and adjudicated answers outside
-   source folders, agent inputs and retrieval stores. Only primary PDF pages reach agents.
+   source folders, agent inputs and retrieval stores. Only primary-source PDF/JATS/media inputs reach agents. Folder separation and instructions do not prove blinding. A published blind benchmark requires a fresh isolated environment that blocks manual answers and external retrieval; ordinary portable or automatic runs are labelled unblinded.
 4. Partition by stable study-family hashing (`family_split`), default 80% development
    and 20% holdout. Explicit preprint/journal relationships share a family. Freeze the
    prompt and protocol before inspecting holdout answers. Publish the achieved family
@@ -24,15 +24,14 @@ and independently adjudicated accuracy. None substitutes for the others.
 ## Execute and compare
 
 Record the software revision, lockfiles, source hashes, protocol, prompt version,
-model IDs, price date, source page coverage, reservations and actual/unknown usage.
-Run the evaluation within the shared USD 100 allowance. Budget exhaustion is a
-reported outcome; unfinished pages do not become fully covered evidence.
+model IDs when reported, source-unit coverage, attempts and actual/unknown usage.
+The default local runner uses the existing agent account and never falls back to a paid API key. Record account limits, pauses and available usage; do not infer dollar costs from token counts. The USD 100 ceiling applies only to an explicitly enabled legacy API evaluation, not to a subscription account allowance. Unfinished source units do not become fully covered evidence.
 
 Export extraction JSON independently before importing the manual reference into
-the evaluator. Use the interface benchmark import or:
+the evaluator. The local command freezes extraction bytes and records reference/output hashes before evaluation:
 
 ```sh
-livingmeta benchmark-file /private/reference.html /private/extracted.json /private/available-dois.json --output private/comparison.json
+livingmeta benchmark-file /private/reference.html /private/extracted.json /private/available-dois.json --output /private/comparison.json
 ```
 
 The comparator matches DOI and experimental conditions, retains ambiguous or
@@ -65,6 +64,6 @@ of matching or improving manual extraction requires completed independent valida
 
 The source/reference scope has been audited. Offline tests exercise synthetic PDF,
 figure, unit, authorization, budget, recovery, discovery and statistics contracts.
-No real paid extraction or independent performance adjudication has yet run.
+No primary-paper extraction or independent performance adjudication has yet run. A native Codex synthetic pilot first paused at the existing account usage limit without API fallback. After reset, three native specialist jobs recovered the fixture means (7 and 5 um), SDs (1 and 0.5 um), and independent n=3 for both arms. Unreported fields remained abstained. This validates transport and fixture behavior, not primary-paper performance.
 Precision, recall, improvement and cost per recovered field are therefore unavailable.
 See [comparison report](comparison-report.md).

@@ -1,0 +1,29 @@
+/* Additional offline-reader layout; the shared academic theme remains authoritative. */
+.report-app .sidebar-bottom p { margin: 0; font-size: 12px; }
+.report-app .project-switcher strong { display: block; font-size: 13px; overflow-wrap: anywhere; }
+.report-app .modal { width: min(820px, 100%); }
+.report-app .table-scroll td { min-width: 110px; }
+.report-app .table-scroll td:first-child { min-width: 200px; overflow-wrap: anywhere; }
+.report-app .source-card .hash { display: block; margin: 12px 0; }
+.report-app .condition-evidence article { margin-top: 14px; }
+.report-app .report-condition-source { margin: 15px 0; font-size: 13px; }
+.report-app .report-condition-source blockquote { margin: 8px 0; }
+.report-source-count { font-weight: 600; margin: 18px 0; }
+.report-app .report-protocol-section { margin: 22px 0; }
+.report-app .report-protocol-section li { margin: 8px 0; color: var(--muted); line-height: 1.65; }
+.report-notices { max-width: 1510px; padding: 15px 28px; margin: 0 0 0 232px; font-size: 12px; color: #576574; }
+.report-notices summary { cursor: pointer; }
+.report-notices pre { white-space: pre-wrap; font-size: 11px; line-height: 1.7; }
+.report-load-error { margin: 30px; color: #b42318; font: 16px system-ui; }
+.report-skip { position: fixed; top: 8px; left: 260px; transform: translateY(-150%); background: #ffffff; border: 2px solid #0969da; color: #0969da; padding: 8px 12px; border-radius: 5px; z-index: 110; }
+.report-skip:focus { transform: translateY(0); }
+@media (max-width: 1250px) { .report-notices { margin-left: 216px; } }
+@media (max-width: 760px) {
+  .report-app .topbar { height: auto; min-height: 58px; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+  .report-app .topbar-actions { width: 100%; justify-content: flex-end; }
+  .report-app .topbar-actions .button { font-size: 12px; }
+  .report-app .page-header h1 { overflow-wrap: anywhere; }
+  .report-app .section-heading { flex-wrap: wrap; }
+  .report-notices { margin-left: 0; padding: 15px 16px; }
+  .report-skip { left: 16px; }
+}

@@ -4,31 +4,38 @@ build-backend = "hatchling.build"
 
 [project]
 name = "living-meta-analysis"
-version = "0.1.0"
+version = "0.2.0"
 description = "Evidence-preserving agent workflows for living reviews in chemistry and chemical engineering"
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
 license = "MIT"
 authors = [{name = "Ronald Marquez Contreras"}]
 dependencies = [
-  "fastapi>=0.115,<1", "uvicorn[standard]>=0.32,<1", "sqlalchemy>=2.0,<3",
-  "psycopg[binary]>=3.2,<4", "pydantic>=2.10,<3", "pydantic-settings>=2.6,<3",
-  "celery[redis]>=5.4,<6", "httpx>=0.28,<1", "python-multipart>=0.0.20,<1",
-  "authlib>=1.4,<2", "itsdangerous>=2.2,<3", "boto3>=1.35,<2",
-  "openai>=2,<3", "openai-agents>=0.4,<1", "pdfplumber>=0.11,<1",
+  "pydantic>=2.10,<3", "httpx>=0.28,<1", "pdfplumber>=0.11,<1",
   "pypdfium2>=4.30,<6", "pillow>=11,<13", "numpy>=2,<3",
   "pint>=0.24,<1", "pyyaml>=6,<7", "pyarrow>=18,<30",
-  "typer>=0.15,<1", "scipy>=1.14,<2", "alembic>=1.14,<2"
+  "typer>=0.15,<1", "scipy>=1.14,<2"
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "pytest-asyncio>=0.25,<2", "ruff>=0.9,<1"]
+hosted = [
+  "fastapi>=0.115,<1", "uvicorn[standard]>=0.32,<1", "sqlalchemy>=2.0,<3",
+  "psycopg[binary]>=3.2,<4", "pydantic-settings>=2.6,<3",
+  "celery[redis]>=5.4,<6", "python-multipart>=0.0.20,<1",
+  "authlib>=1.4,<2", "itsdangerous>=2.2,<3", "boto3>=1.35,<2",
+  "openai>=2,<3", "openai-agents>=0.4,<1", "alembic>=1.14,<2"
+]
 
 [project.scripts]
 livingmeta = "livingmeta.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/livingmeta"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"protocols" = "livingmeta/protocols"
+"statistics/packages.lock.tsv" = "livingmeta/statistics/packages.lock.tsv"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

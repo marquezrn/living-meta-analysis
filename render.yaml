@@ -76,7 +76,7 @@ services:
     plan: 0.5c-512mb
     dockerfilePath: ./Dockerfile
     schedule: "0 * * * *"
-    dockerCommand: livingmeta monitor-due
+    dockerCommand: livingmeta hosted-monitor-due
     envVars:
       - key: ENVIRONMENT
         value: monitor

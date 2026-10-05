@@ -1,0 +1,8 @@
+{
+  "entry": "web/report/main.tsx",
+  "format": "iife",
+  "network_services": false,
+  "split_chunks": false,
+  "plotly": "4.1.1",
+  "schema_version": 2
+}

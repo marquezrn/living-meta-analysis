@@ -123,9 +123,17 @@ are targets rather than achieved results.
 ## Living-state integrity
 
 Metadata checks do not trigger paid extraction. Newly found publications remain
-pending until the user starts a budgeted extraction. Maintain separate last metadata
+pending until the user explicitly starts extraction. Maintain separate last metadata
 check, last completed extraction, and last completed synthesis timestamps. Source
-failures, page-budget exhaustion, unprocessed evidence, and status changes prevent
+failures, job-limit or account-limit pauses, unprocessed evidence, and status changes prevent
 an outdated synthesis from being labelled current. Corrections and retractions
 preserve their history and identify affected evidence and analyses; absence of a
 retraction flag from another provider never restores a withdrawn study.
+
+
+Ordinary local agent runs are unblinded unless an independently verified isolated
+environment prevents reference access and external retrieval. Local agents submit
+candidate files; hashes, geometry, transformations and source evidence are checked
+by the deterministic engine. Successful schema validation is not evidence of model
+accuracy. XML evidence uses actual element locators and original media rather than
+invented PDF pages. Structural inventory is reported separately from agent review.

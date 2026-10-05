@@ -45,12 +45,24 @@ async def download_pdf(url, max_bytes, *, transport=None):
 
 
 async def resolve_publication_access(publication, settings):
-    from .discovery.fulltext import resolve_pmc, resolve_unpaywall
+    from .discovery.fulltext import convert_pmc_ids, resolve_pmc, resolve_unpaywall
+    from .discovery.service import SourceUnavailable
     if publication.payload.get("status", "active") != "active":
         raise ValueError("Publication notices require review; this source cannot be acquired as active evidence")
     credentials = {"contact_email": settings.contact_email}
-    pmcid = publication.payload.get("source_id", "")
-    if pmcid.startswith("PMC"):
+    pmcid = publication.payload.get("pmcid")
+    source_id = publication.payload.get("source_id", "")
+    if not pmcid and source_id.startswith("PMC"):
+        pmcid = source_id.split(":")[-1]
+        if pmcid.isdigit():
+            pmcid = f"PMC{pmcid}"
+    converter_unavailable = False
+    if not pmcid and publication.doi:
+        try:
+            pmcid = (await convert_pmc_ids([publication.doi], credentials)).get(publication.doi)
+        except (SourceUnavailable, httpx.HTTPError):
+            converter_unavailable = True
+    if pmcid:
         resolution = await resolve_pmc(pmcid, credentials)
     elif publication.doi:
         resolution = await resolve_unpaywall(publication.doi, credentials)
@@ -58,6 +70,8 @@ async def resolve_publication_access(publication, settings):
         raise ValueError("No DOI or PMCID is available for access resolution")
     if resolution.publication_status != "active":
         raise ValueError("Access metadata flags this publication; scientific reassessment is required")
+    if converter_unavailable:
+        resolution.limitations.append("PMC identifier conversion was unavailable; DOI access fallback was used")
     return resolution
 
 

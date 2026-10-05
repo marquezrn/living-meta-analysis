@@ -23,7 +23,10 @@ class RunStatus(StrEnum):
 
 class Evidence(ScientificModel):
     document_hash: str
-    page: int = Field(ge=1)
+    source_format: Literal["pdf", "xml", "media"] = "pdf"
+    page: int | None = Field(default=None, ge=1)
+    xml_element: str | None = None
+    asset_path: str | None = None
     source_type: Literal["text", "table", "figure", "microscopy"]
     locator: str
     excerpt: str
@@ -34,6 +37,21 @@ class Evidence(ScientificModel):
     artifact_key: str | None = None
     calibration: str | None = None
     digitization_uncertainty: float | None = None
+
+    @model_validator(mode="after")
+    def validate_source_location(self):
+        if self.source_format == "pdf" and self.page is None:
+            raise ValueError("PDF evidence requires its actual page number")
+        if self.source_format != "pdf" and self.page is not None:
+            raise ValueError("XML and media evidence must not invent PDF page numbers")
+        if self.source_format == "xml" and not (self.xml_element or "").strip():
+            raise ValueError("XML evidence requires an element ID or structural path")
+        if self.source_format == "media":
+            from pathlib import PurePosixPath
+            path = PurePosixPath(self.asset_path or "")
+            if not self.asset_path or path.is_absolute() or ".." in path.parts or "\\" in self.asset_path:
+                raise ValueError("Media evidence requires a safe workspace-relative asset path")
+        return self
 
 
 class Attribute(ScientificModel):
@@ -50,6 +68,7 @@ class Attribute(ScientificModel):
 class Measurement(ScientificModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     experiment_id: str
+    condition_id: str | None = None
     outcome: str
     raw_value: str
     value: float | None = None
@@ -103,6 +122,7 @@ class Condition(BaseModel):
 class StudyFamily(BaseModel):
     id: str
     publication_dois: list[str]
+    publication_ids: list[str] = Field(default_factory=list)
     document_ids: list[str]
     experiment_ids: list[str]
     relationship_basis: str
@@ -154,7 +174,7 @@ class Protocol(BaseModel):
         "scopus": 'TITLE-ABS-KEY(Pickering AND (nanocellulose OR "cellulose nanocrystals" OR "cellulose nanofibrils"))',
         "arxiv": 'all:Pickering AND (all:nanocellulose OR all:"cellulose nanocrystals")',
     })
-    enabled_sources: list[str] = Field(default_factory=lambda: ["openalex", "crossref", "pubmed", "europepmc"])
+    enabled_sources: list[str] = Field(default_factory=lambda: ["pubmed", "europepmc", "crossref"])
     analysis_mode: Literal["descriptive", "inferential"] = "descriptive"
     outcome: str = "Droplet_Size_um"
     unit: str | None = None
@@ -166,10 +186,23 @@ class Protocol(BaseModel):
     concentration_basis: str | None = None
 
 
+class PublicationUpdate(BaseModel):
+    """A directed notice relationship; notice and original article remain distinct."""
+
+    relation: str
+    direction: Literal["updates", "updated_by"]
+    status: Literal["corrected", "retracted", "concern", "withdrawn"]
+    target_doi: str | None = None
+    target_pmid: str | None = None
+    target_pmcid: str | None = None
+
+
 class Citation(BaseModel):
     source: str
     source_id: str
     doi: str | None = None
+    pmid: str | None = None
+    pmcid: str | None = None
     title: str
     authors: list[str] = Field(default_factory=list)
     year: int | None = None
@@ -182,3 +215,4 @@ class Citation(BaseModel):
     status: Literal["active", "corrected", "retracted", "concern", "withdrawn"] = "active"
     related_dois: list[str] = Field(default_factory=list)
     updated_at: str | None = None
+    update_relations: list[PublicationUpdate] = Field(default_factory=list)
