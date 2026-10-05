@@ -74,13 +74,13 @@ They are not measurements of model extraction quality. The local host has no R
 engine or Docker; GitHub's container check requires the pinned R engine and runs
 its integration test. Repository CI records the verification status for each commit.
 
-Local edition verification (October 5, 2026): **232 Python tests passed; 3 skipped**
+Local edition verification (October 5, 2026): **234 Python tests passed; 3 skipped**
 (two PostgreSQL checks and the pinned R host integration check). **53 frontend tests
 passed**, including standalone reader startup with network and eval blocked. Python
 linting, TypeScript checking, the preserved static demo build, wheel construction,
 and a fresh core-only wheel install passed. The deterministic synthetic workflow
 completed preparation, verification, descriptive synthesis, and HTML/JSON/CSV/Parquet
-exports with network creation blocked and no hosted SDK imports. Additional release
+exports with network access blocked and no hosted SDK imports. Additional release
 checks are recorded in CI for each published revision.
 
 The real Codex transport authenticated through ChatGPT and paused cleanly at the

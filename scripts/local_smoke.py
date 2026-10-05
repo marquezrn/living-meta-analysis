@@ -5,6 +5,7 @@ import json
 import socket
 import sys
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 from livingmeta.domain import Protocol
@@ -34,11 +35,28 @@ def write_pdf(path):
     return text
 
 
-def smoke(output=None):
+@contextmanager
+def blocked_network():
+    """Block Python network operations while preserving lazy SSL class imports."""
     def blocked(*args, **kwargs):
         raise AssertionError("Unexpected network access during deterministic processing")
-    socket.socket, socket.create_connection = blocked, blocked
-    with tempfile.TemporaryDirectory(prefix="livingmeta-offline-") as directory:
+    targets = [(socket.socket, name) for name in
+               ("connect", "connect_ex", "send", "sendall", "sendto", "sendmsg", "sendfile")
+               if hasattr(socket.socket, name)]
+    targets += [(socket, name) for name in
+                ("create_connection", "getaddrinfo", "gethostbyname", "gethostbyname_ex", "gethostbyaddr")]
+    originals = [(owner, name, getattr(owner, name)) for owner, name in targets]
+    try:
+        for owner, name, _ in originals:
+            setattr(owner, name, blocked)
+        yield
+    finally:
+        for owner, name, original in originals:
+            setattr(owner, name, original)
+
+
+def smoke(output=None):
+    with blocked_network(), tempfile.TemporaryDirectory(prefix="livingmeta-offline-") as directory:
         root = Path(directory)
         papers = root / "papers"
         papers.mkdir()

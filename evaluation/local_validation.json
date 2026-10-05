@@ -3,7 +3,7 @@
   "validation_kind": "software_and_synthetic_fixture_only",
   "reported_date": "2026-10-05",
   "python": {
-    "passed": 232,
+    "passed": 234,
     "skipped": 3,
     "skip_reasons": [
       "Dedicated PostgreSQL unavailable (two tests)",

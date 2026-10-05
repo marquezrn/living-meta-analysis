@@ -7,6 +7,7 @@ RUN npm install --global pnpm@${PNPM_VERSION}
 COPY web/package.json web/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY web/ ./
+COPY src/livingmeta/report_assets/ /src/livingmeta/report_assets/
 RUN pnpm typecheck && pnpm test && pnpm build
 
 FROM rocker/r-ver:4.5.1 AS application-base
@@ -34,6 +35,8 @@ RUN pip install --require-hashes -r requirements.lock \
     && pip install build==1.6.1 hatchling==1.32.4
 COPY pyproject.toml README.md ./
 COPY src/ ./src/
+COPY protocols/ ./protocols/
+COPY statistics/packages.lock.tsv ./statistics/packages.lock.tsv
 COPY statistics/meta_analysis.R ./statistics/meta_analysis.R
 RUN pip install --no-deps --no-build-isolation . \
     && python -c 'from importlib.resources import files; assert files("livingmeta.statistics").joinpath("meta_analysis.R").is_file()'
